@@ -1,0 +1,9 @@
+name: ijdi
+dependencies:
+  - python=3.7
+  - pip
+  - matplotlib
+  - jupyter
+  - jupyterlab
+  - numpy
+  - pandas
