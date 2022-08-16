@@ -16,6 +16,6 @@ conda env create -f environment.yml
 conda activate ijdi
 ```
 
-## Launch JupyterLab
+## Launch Jupyter Lab
 ```bash
 jupyter lab
