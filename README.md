@@ -1,8 +1,6 @@
 # Insufficiently Justified Disparate Impact
 Authors:
-Neil L. Menghani
-Edward McFowland III
-Daniel B. Neill
+(anonymized)
 
 
 ## Building an Environment
@@ -77,9 +75,7 @@ Experiment 2:
 
 Mitigation Approach 1:
 
-`compas_mit_1_neg.ipynb`
-
-`compas_mit_1_pos.ipynb`
+`compas_mit_1.ipynb`
 
 
 Mitigation Approach 2:
