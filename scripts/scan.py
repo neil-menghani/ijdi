@@ -84,7 +84,8 @@ def summarize_scan(df, features, proba_ijdi_col, outcomes_col, current_subset, i
     print("Expected proportion of", outcomes_col, ":", temp_probs.mean())
     print("Summary statistics:")
     print(temp_treatments.describe(include=include))
-    
+
+# IJDI-Scan (Algorithm 1; outlined in Section 4.2 of the paper)
 def run_ijdi_scan(df, features, proba_confusion_col, proba_ijdi_col, outcomes_col, threshold, lambda_param, 
                   constant_threshold=True, confusion_metrics=True, ijdi_metrics=True, verbose=False, 
                   p_bar='p_bar'):
