@@ -1,4 +1,5 @@
 import pandas as pd, numpy as np
+import random
 
 def set_edge(x):
     if x < 0:
@@ -78,3 +79,12 @@ def calculate_metric(df, col_name, formula, recalc_subset=[]):
         return df.apply(lambda x : x['formula'] if x['in_recalc_subset'] else x[col_name], axis=1)
     else:
         return formula
+
+def pick_random_protected_group(df, cols):
+    df_s = df[cols]
+    unique_values = []
+    for i in list(df_s):
+        for k in df_s[i].unique():
+            unique_values.append((i,k))
+    key, key_value = random.choice(unique_values)
+    return key, key_value
