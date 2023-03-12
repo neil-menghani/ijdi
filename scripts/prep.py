@@ -88,3 +88,16 @@ def pick_random_protected_group(df, cols):
             unique_values.append((i,k))
     key, key_value = random.choice(unique_values)
     return key, key_value
+
+def pick_random_subgroup(df, cols):
+    df_s = df[cols]
+    subgroup = {}
+    while subgroup == {}:
+        for i in cols:
+            subset_values = []
+            while len(subset_values) == 0:
+                unique_values = df_s[i].unique()
+                subset_values = [x for x in unique_values if random.choice((True, False))]
+            if len(unique_values) != len(subset_values):
+                subgroup[i] = list(subset_values)
+    return subgroup

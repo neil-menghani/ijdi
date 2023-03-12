@@ -23,7 +23,7 @@ def lr_build_and_predict(df, exclude):
                  , 'charge_degree':'charge_degree_M'
                  }
     for extra_col in extra_cols.keys():
-        if extra_col not in exclude:
+        if extra_col in compas_df.columns:
             compas_df = compas_df.drop(columns=extra_cols[extra_col])
     
     X = compas_df.drop(columns=['outcomes'])
