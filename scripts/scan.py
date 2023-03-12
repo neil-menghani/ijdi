@@ -43,14 +43,15 @@ def md_scan(coordinates, probs, outcomes, penalty, num_iters, direction='positiv
             current_subset = temp_subset
             current_score = temp_score
         
-        print("Subset found on iteration",i+1,"of",num_iters,"with score",current_score,":")
-        print(current_subset)
+        # print("Subset found on iteration",i+1,"of",num_iters,"with score",current_score,":")
+        # print(current_subset)
         if (current_score > best_score):
             best_subset = current_subset.copy()
             best_score = current_score
-            print("Best score is now",best_score)
+            # print("Best score is now",best_score)
         else:
-            print("Current score of",current_score,"does not beat best score of",best_score)
+            pass
+            # print("Current score of",current_score,"does not beat best score of",best_score)
             
     return [best_subset,best_score]
 
@@ -88,14 +89,14 @@ def summarize_scan(df, features, proba_ijdi_col, outcomes_col, current_subset, i
 # IJDI-Scan (Algorithm 1; outlined in Section 4.2 of the paper)
 def run_ijdi_scan(df, features, proba_confusion_col, proba_ijdi_col, outcomes_col, threshold, lambda_param, 
                   constant_threshold=True, confusion_metrics=True, ijdi_metrics=True, verbose=False, 
-                  p_bar='p_bar'):
+                  p_bar='p_bar', recalc_subset=[]):
     
     # generate metrics (if not already done, either in previous recursive call or before running scan)
     if confusion_metrics:
-        df = generate_metrics(df, proba_confusion_col, outcomes_col, threshold, constant_threshold=constant_threshold)
-       
+        df = generate_metrics(df, proba_confusion_col, outcomes_col, threshold, constant_threshold=constant_threshold, recalc_subset=recalc_subset)
+
     if ijdi_metrics:
-        df = generate_ijdi_metrics(df, proba_ijdi_col, lambda_param, p_bar=p_bar)
+        df = generate_ijdi_metrics(df, proba_ijdi_col, lambda_param, p_bar=p_bar, recalc_subset=recalc_subset)
         
     current_subset, current_score = run_scan(df, features, 'p_hat', 'positives', scan_type='ijdi', penalty=0.1, num_iters=10, direction='positive')
     
@@ -103,16 +104,13 @@ def run_ijdi_scan(df, features, proba_confusion_col, proba_ijdi_col, outcomes_co
         print("No subset was detected.")
         return current_subset, current_score
     
-    if current_subset:
-        in_current_subset = df[list(current_subset.keys())].isin(current_subset).all(axis=1)
-    else:
-        in_current_subset = pd.Series(True, index=df.index)
+    in_current_subset = get_subset_series(df, current_subset)
         
     if 'p_old' not in df.columns:
         print("First Iteration")
         df['p_old'] = df[proba_ijdi_col]
         df['p_bar_old'] = df['p_bar']
-        
+
     df['in_current_subset'] = in_current_subset
     in_current_subset_df = df[in_current_subset]
     p_delta_avg = in_current_subset_df['p_delta'].mean()
@@ -120,15 +118,16 @@ def run_ijdi_scan(df, features, proba_confusion_col, proba_ijdi_col, outcomes_co
     print("Average p_delta:", p_delta_avg)
     print("Average p_censor:", p_censor_avg)
     
+    not_in_current_subset_df = df[~in_current_subset]
+    p_not_s_avg = not_in_current_subset_df['p_old'].mean()
+    print("p(S):", in_current_subset_df[proba_ijdi_col].mean(), "p(~S):", p_not_s_avg, "E[censored]", in_current_subset_df['p_hat'].mean(), "E[uncensored]", in_current_subset_df['p_hat_raw'].mean())
+
     if verbose:
-        print(in_current_subset_df[[proba_ijdi_col, 'p_old', 'p_bar', 'p_bar_old', 'p_delta', 
-                                    'positives_constprobs', 'p_hat_raw', 'p_hat']])
+        print(in_current_subset_df[[proba_ijdi_col, 'p_old', 'p_bar', 'p_bar_old', 'p_delta', 'positives_constprobs', 'p_hat_raw', 'p_hat']])
 
     if p_delta_avg < -1E-6: # check p_delta condition
         print("Subset violates p_delta condition. Adjusting and Re-running...")
         
-        not_in_current_subset_df = df[~in_current_subset]
-        p_not_s_avg = not_in_current_subset_df['p_old'].mean()
         in_current_subset_violates_df = in_current_subset_df.loc[in_current_subset_df[proba_ijdi_col] < p_not_s_avg]
         alpha_ratio = (p_not_s_avg - in_current_subset_df[proba_ijdi_col]).sum() / \
                       (p_not_s_avg - in_current_subset_violates_df[proba_ijdi_col]).sum()
@@ -140,8 +139,7 @@ def run_ijdi_scan(df, features, proba_confusion_col, proba_ijdi_col, outcomes_co
         print("p(S):", in_current_subset_df[proba_ijdi_col].mean(), "p(~S):", p_not_s_avg)
         
         return run_ijdi_scan(df, features, proba_confusion_col, proba_ijdi_col, outcomes_col, threshold, lambda_param, 
-                             constant_threshold=constant_threshold, confusion_metrics=True, ijdi_metrics=True, verbose=verbose,
-                             p_bar='p_bar_old')
+                             constant_threshold=constant_threshold, confusion_metrics=True, ijdi_metrics=True, verbose=verbose, p_bar='p_bar_old', recalc_subset=current_subset)
 
     if p_censor_avg < -1E-6: # check p_censor condition
         print("Subset violates p_censor condition. Adjusting and Re-running...")
@@ -154,6 +152,8 @@ def run_ijdi_scan(df, features, proba_confusion_col, proba_ijdi_col, outcomes_co
             df['p_censor'] = df.apply(lambda x : 0
                                                  if (x['in_current_subset'])
                                                  else x['p_censor'], axis=1)
+            in_current_subset_df = df[in_current_subset]
+            print("E[censored]:", in_current_subset_df['p_hat'].mean())
         else: # E[uncensored] < 1
             print("E[uncensored] < 1. Pushing all p_hat values below 1 toward 1 so that E[censored] = E[uncensored].")
             numerator = in_current_subset_df['p_hat_raw'].sum() - in_current_subset_df['p_hat'].sum()
@@ -164,10 +164,11 @@ def run_ijdi_scan(df, features, proba_confusion_col, proba_ijdi_col, outcomes_co
                                               if (x['in_current_subset'] and (x['p_hat'] < 1)) 
                                               else x['p_hat'], axis=1)
             df['p_censor'] = df['p_hat'] - df['p_hat_raw'] # should be 0 for subset
+            in_current_subset_df = df[in_current_subset]
+            print("E[censored]:", in_current_subset_df['p_hat'].mean(), "E[uncensored]:", in_current_subset_df['p_hat_raw'].mean())
         
         return run_ijdi_scan(df, features, proba_confusion_col, proba_ijdi_col, outcomes_col, threshold, lambda_param, 
-                             constant_threshold=constant_threshold, confusion_metrics=False, ijdi_metrics=False, verbose=verbose,
-                             p_bar='p_bar_old')
+                             constant_threshold=constant_threshold, confusion_metrics=False, ijdi_metrics=False, verbose=verbose, p_bar='p_bar_old')
     
     print("Subset does not violate p_delta or p_censor conditions!")
     return current_subset, current_score
