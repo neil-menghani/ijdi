@@ -27,6 +27,8 @@ The following files, found in the `scripts` directory, are used by the experimen
 
 `prep.py`
 
+`model.py`
+
 `scan.py`
 
 `subset.py`
@@ -38,7 +40,7 @@ The following files, found in the `scripts` directory, are used by the experimen
 
 
 ## Datasets
-The following datasets are used by the experiments. See Appendix A.4 for a more detailed description.
+The following datasets are used by the experiments. See Appendix G for a more detailed description.
 
 
 COMPAS dataset (Original source: ProPublica; Pre-processed Data from: https://github.com/propublica/compas-analysis)
