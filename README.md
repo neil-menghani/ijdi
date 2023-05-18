@@ -68,9 +68,13 @@ Experiment 1:
 
 Experiment 2:
 
-`compas_sim_2_neg.ipynb`
+`compas_sim_2a_neg.ipynb`
 
-`compas_sim_2_pos.ipynb`
+`compas_sim_2a_pos.ipynb`
+
+`compas_sim_2b_neg.ipynb`
+
+`compas_sim_2b_pos.ipynb`
 
 
 Mitigation Approach 1:
