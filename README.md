@@ -1,7 +1,7 @@
 # Insufficiently Justified Disparate Impact
 Authors:
-Neil Menghani
-Edward McFowland III
+Neil Menghani,
+Edward McFowland III,
 Daniel B. Neill
 
 
