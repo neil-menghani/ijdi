@@ -1,6 +1,8 @@
 # Insufficiently Justified Disparate Impact
 Authors:
-(anonymized)
+Neil Menghani
+Edward McFowland III
+Daniel B. Neill
 
 
 ## Building an Environment
